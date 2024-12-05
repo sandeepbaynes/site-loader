@@ -22,12 +22,14 @@ app.get('/site', async (req, res) => {
 
         // Remove specific <script> tags
         if (typeof html === 'string') {
-            html = html.replaceAll(
-                'src="https://maison-labs.com/agent-inject.bundle.js"',
-                ''
-            ).replaceAll(origin, `/site/?url=${encodeURIComponent(origin)}`);
+            if (process.env.REPLACE_STRINGS) {
+                process.env.REPLACE_STRINGS.split(',').forEach((str) => {
+                    html = html.replaceAll(str, '');
+                });
+            }
+            html = html.replaceAll(origin, `/site/?url=${encodeURIComponent(origin)}`);
         }
-        res.cookie('maison-site', origin, {
+        res.cookie('load-site', origin, {
             httpOnly: true,
             secure: true,
             sameSite: 'None',
@@ -45,7 +47,7 @@ app.get('/site', async (req, res) => {
 
 app.get('/*', async (req, res) => {
     try {
-        const siteUrl = req.cookies['maison-site'];
+        const siteUrl = req.cookies['load-site'];
         if (siteUrl) {
             const targetUrl = `${siteUrl}${req.path}`;
             // Make a GET request to the target URL
@@ -60,10 +62,12 @@ app.get('/*', async (req, res) => {
 
             // Remove specific <script> tags
             if (typeof response.data === 'string') {
-                response.data = response.data.replaceAll(
-                    'src="https://maison-labs.com/agent-inject.bundle.js"',
-                    ''
-                ).replaceAll(origin, `/?url=${encodeURIComponent(origin)}`);
+                if (process.env.REPLACE_STRINGS) {
+                    process.env.REPLACE_STRINGS.split(',').forEach((str) => {
+                        response.data = response.data.replaceAll(str, '');
+                    });
+                }
+                response.data = response.data.replaceAll(origin, `/?url=${encodeURIComponent(origin)}`);
             }
 
             // Set headers to match the proxied response
@@ -78,7 +82,7 @@ app.get('/*', async (req, res) => {
             // Send the response data
             res.status(response.status).send(response.data);
         } else {
-            res.status(400).send('Invalid maison demo site');
+            res.status(400).send('Invalid load site');
         }
     } catch (error) {
         console.error('Error during proxy request:', error.message);
