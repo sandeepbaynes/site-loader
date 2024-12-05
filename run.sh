@@ -23,5 +23,6 @@ else
 fi
 
 export PORT=8087
+export REPLACE_STRINGS=replace,string
 npm install --prod > logs/logs.log     # Comment this line if no install module is required
 node server.js >> logs/logs.log 2>&1 &
