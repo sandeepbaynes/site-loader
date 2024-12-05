@@ -1,0 +1,20 @@
+{
+  "name": "site-loader",
+  "version": "1.0.0",
+  "description": "Loads any site and it's resources so it can be served within another domain",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Sandeep Baynes",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^1.7.9",
+    "cheerio": "^1.0.0",
+    "express": "^4.21.1",
+    "cookie-parser": "^1.4.7"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  }
+}
