@@ -7,45 +7,7 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Endpoint to fetch and rewrite the HTML of a given site
-app.get('/site', async (req, res) => {
-    const { url } = req.query;
-    const { origin } = new URL(url);
-    if (!url) return res.status(400).send('Missing URL parameter.');
-    try {
-        const response = await axios.get(url);
-        const contentType = response.headers['content-type'];
-        if (!contentType || !contentType.includes('text/html')) {
-            return res.status(400).send('URL is not an HTML page.');
-        }
-        let html = response.data;
-
-        // Remove specific <script> tags
-        if (typeof html === 'string') {
-            if (process.env.REPLACE_STRINGS) {
-                process.env.REPLACE_STRINGS.split(',').forEach((str) => {
-                    html = html.replaceAll(str, '');
-                });
-            }
-            html = html.replaceAll(origin, `/site/?url=${encodeURIComponent(origin)}`);
-        }
-        res.cookie('load-site', origin, {
-            httpOnly: true,
-            secure: true,
-            sameSite: 'None',
-            path: '/'
-        });
-        // Allow embedding in an iframe
-        res.set('Content-Security-Policy', "frame-ancestors *;");
-        res.set('X-Frame-Options', 'ALLOWALL');
-        res.send(html);
-    } catch (error) {
-        console.error(`Error fetching site: ${error.message}`);
-        res.status(500).send('Error fetching site.');
-    }
-});
-
-app.get('/*', async (req, res) => {
+const getObject = async (req, res) => {
     try {
         const siteUrl = req.cookies['load-site'];
         if (siteUrl) {
@@ -88,7 +50,51 @@ app.get('/*', async (req, res) => {
         console.error('Error during proxy request:', error.message);
         res.status(500).send('Internal Server Error');
     }
+}
+
+// Endpoint to fetch and rewrite the HTML of a given site
+app.get('/site', async (req, res) => {
+    const { url } = req.query;
+    if (req.headers['content-type'] != 'text/html') {
+        getObject(req, res);
+        return;
+    }
+    const { origin } = new URL(url);
+    if (!url) return res.status(400).send('Missing URL parameter.');
+    try {
+        const response = await axios.get(url);
+        const contentType = response.headers['content-type'];
+        if (!contentType || !contentType.includes('text/html')) {
+            return res.status(400).send('URL is not an HTML page.');
+        }
+        let html = response.data;
+
+        // Remove specific <script> tags
+        if (typeof html === 'string') {
+            if (process.env.REPLACE_STRINGS) {
+                process.env.REPLACE_STRINGS.split(',').forEach((str) => {
+                    html = html.replaceAll(str, '');
+                });
+            }
+            html = html.replaceAll(origin, `/site/?url=${encodeURIComponent(origin)}`);
+        }
+        res.cookie('load-site', origin, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'None',
+            path: '/'
+        });
+        // Allow embedding in an iframe
+        res.set('Content-Security-Policy', "frame-ancestors *;");
+        res.set('X-Frame-Options', 'ALLOWALL');
+        res.send(html);
+    } catch (error) {
+        console.error(`Error fetching site: ${error.message}`);
+        res.status(500).send('Error fetching site.');
+    }
 });
+
+app.get('/*', getObject);
 
 app.listen(process.env.PORT, () => {
     console.log(`Server started on port ${process.env.PORT}`);
