@@ -11,7 +11,10 @@ const getObject = async (req, res) => {
     try {
         const siteUrl = req.cookies['load-site'];
         if (siteUrl) {
-            const targetUrl = `${siteUrl}${req.path}`;
+            let targetUrl = `${siteUrl}${req.path}`;
+            if (req.path == '/loadsite/') {
+                targetUrl = req.query.url;
+            }
             // Make a GET request to the target URL
             const response = await axios.get(targetUrl, {
                 responseType: 'arraybuffer', // Support binary responses
@@ -53,7 +56,7 @@ const getObject = async (req, res) => {
 }
 
 // Endpoint to fetch and rewrite the HTML of a given site
-app.get('/site', async (req, res) => {
+app.get('/loadsite', async (req, res) => {
     const { url } = req.query;
     let uUrl = new URL(url);
     if (req.headers['content-type'] != 'text/html' && !(uUrl.pathname == '/' && uUrl.search == '')) {
@@ -77,7 +80,7 @@ app.get('/site', async (req, res) => {
                     html = html.replaceAll(str, '');
                 });
             }
-            html = html.replaceAll(origin, `/site/?url=${encodeURIComponent(origin)}`);
+            html = html.replaceAll(origin, `/loadsite/?url=${encodeURIComponent(origin)}`);
         }
         res.cookie('load-site', origin, {
             httpOnly: true,
