@@ -57,7 +57,7 @@ const getObject = async (req, res) => {
 
 // Endpoint to fetch and rewrite the HTML of a given site
 app.get('/loadsite', async (req, res) => {
-    const { url } = req.query;
+    const url = decodeURIComponent(req.query.url);
     let uUrl = new URL(url);
     if (req.headers['content-type'] != 'text/html' && !(uUrl.pathname == '/' && uUrl.search == '')) {
         getObject(req, res);
