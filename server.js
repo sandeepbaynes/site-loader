@@ -23,8 +23,7 @@ const getObject = async (req, res) => {
                     host: new URL(siteUrl).host, // Update Host header
                 },
             });
-
-
+            
             // Remove specific <script> tags
             if (typeof response.data === 'string') {
                 if (process.env.REPLACE_STRINGS) {
@@ -66,7 +65,12 @@ app.get('/loadsite', async (req, res) => {
     const { origin } = new URL(url);
     if (!url) return res.status(400).send('Missing URL parameter.');
     try {
-        const response = await axios.get(url);
+        const response = await axios.get(url, {
+            headers: {
+                ...req.headers, // Forward original request headers
+                host: new URL(url).host, // Update Host header
+            },
+        });
         const contentType = response.headers['content-type'];
         if (!contentType || !contentType.includes('text/html')) {
             return res.status(400).send('URL is not an HTML page.');
