@@ -23,7 +23,7 @@ const getObject = async (req, res) => {
                     host: new URL(siteUrl).host, // Update Host header
                 },
             });
-            
+
             // Remove specific <script> tags
             if (typeof response.data === 'string') {
                 if (process.env.REPLACE_STRINGS) {
@@ -56,15 +56,15 @@ const getObject = async (req, res) => {
 
 // Endpoint to fetch and rewrite the HTML of a given site
 app.get('/loadsite', async (req, res) => {
-    const url = decodeURIComponent(req.query.url);
-    let uUrl = new URL(url);
-    if (req.headers['content-type'] != 'text/html' && !(uUrl.pathname == '/' && uUrl.search == '')) {
-        getObject(req, res);
-        return;
-    }
-    const { origin } = new URL(url);
-    if (!url) return res.status(400).send('Missing URL parameter.');
     try {
+        const url = decodeURIComponent(req.query.url);
+        let uUrl = new URL(url);
+        if (req.headers['content-type'] != 'text/html' && !(uUrl.pathname == '/' && uUrl.search == '')) {
+            getObject(req, res);
+            return;
+        }
+        const { origin } = new URL(url);
+        if (!url) return res.status(400).send('Missing URL parameter.');
         const response = await axios.get(url, {
             headers: {
                 ...req.headers, // Forward original request headers
