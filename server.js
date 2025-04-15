@@ -10,6 +10,7 @@ app.use(express.urlencoded({ extended: true }));
 const getObject = async (req, res) => {
     try {
         const siteUrl = req.cookies['load-site'];
+        console.log(`Fetching object: ${siteUrl}`);
         if (siteUrl) {
             let targetUrl = `${siteUrl}${req.path}`;
             if (req.path == '/loadsite/') {
@@ -57,6 +58,7 @@ const getObject = async (req, res) => {
 // Endpoint to fetch and rewrite the HTML of a given site
 app.get('/loadsite', async (req, res) => {
     try {
+        console.log(`Fetching url: ${req.query.url}`);
         const url = decodeURIComponent(req.query.url);
         let uUrl = new URL(url);
         if (req.headers['content-type'] != 'text/html' && !(uUrl.pathname == '/' && uUrl.search == '')) {
@@ -100,6 +102,11 @@ app.get('/loadsite', async (req, res) => {
         console.error(`Error fetching site: ${error.message}`);
         res.status(500).send('Error fetching site.');
     }
+});
+
+app.get('/health', (req, res) => {
+    console.log('Health requested');
+    res.status(200).send();
 });
 
 app.get('/*', getObject);
